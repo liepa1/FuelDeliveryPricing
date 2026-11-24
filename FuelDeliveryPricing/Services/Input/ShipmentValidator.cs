@@ -78,7 +78,6 @@ public class ShipmentValidator
                 continue;
             }
 
-            // 7. All validations passed - create Shipment
             valid.Add(new Shipment
             {
                 Id = id,
@@ -97,7 +96,6 @@ public class ShipmentValidator
     private bool HasMissingFields(JsonElement element)
     {
 
-        // 1. Check required fields
         string[] requiredFields = _configuration.RequiredFields;
 
 

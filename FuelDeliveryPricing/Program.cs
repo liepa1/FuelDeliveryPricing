@@ -4,7 +4,6 @@ using FuelDeliveryPricing.Services;
 using FuelDeliveryPricing.Services.Input;
 using FuelDeliveryPricing.Services.Output;
 
-Console.WriteLine("Fuel Delivery Pricing System");
 
 try
 {
