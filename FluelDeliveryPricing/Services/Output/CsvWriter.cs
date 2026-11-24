@@ -4,19 +4,25 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using FuelDeliveryPricing.Configuration;
 using FuelDeliveryPricing.Models.Results;
 
-namespace FuelDeliveryPricing.Services
+namespace FuelDeliveryPricing.Services.Output
 {
     public class CsvWriter
     {
-        private readonly string _outputPath =
-        Path.Combine(Directory.GetCurrentDirectory(), "output");
+        private readonly FileConfiguration _configuration;
 
-        private const string Name = "Firstname_Lastname";
+        private readonly string _outputPath;
 
-        public CsvWriter()
+
+        public CsvWriter(FileConfiguration configuration)
         {
+            _configuration = configuration;
+            _outputPath = Path.Combine(
+                Directory.GetCurrentDirectory(),
+                configuration.OutputFolder);
+
             Directory.CreateDirectory(_outputPath);
         }
 
@@ -26,7 +32,7 @@ namespace FuelDeliveryPricing.Services
 
             using var writer = new StreamWriter(path);
 
-            writer.WriteLine(Name);
+            writer.WriteLine(_configuration.Name);
             writer.WriteLine("ShipmentID,NetFuelPrice,LogisticsCost,TotalTax,GrandTotal");
 
             foreach (var price in prices)
@@ -43,11 +49,11 @@ namespace FuelDeliveryPricing.Services
 
         public void WriteErrors(List<ShipmentError> errors)
         {
-            string path = Path.Combine(_outputPath, "errors.csv");
+            string path = Path.Combine(_outputPath, _configuration.ErrorsOutput);
 
             using var writer = new StreamWriter(path);
 
-            writer.WriteLine(Name);
+            writer.WriteLine(_configuration.Name);
             writer.WriteLine("ShipmentID,ErrorCode");
 
             foreach (var error in errors)
@@ -62,13 +68,13 @@ namespace FuelDeliveryPricing.Services
 
             using var writer = new StreamWriter(path);
 
-            writer.WriteLine(Name);
+            writer.WriteLine(_configuration.Name);
             writer.WriteLine("ShipmentCount,MostExpensiveID,TotalVAT");
 
-            
+
             writer.WriteLine(
                     $"{report.DeliveryCount}," +
-                    $"{report.MostExpensiveDeliveryId}" +
+                    $"{report.MostExpensiveDeliveryId}," +
                     $"{report.TotalVat}"
                     );
 
@@ -77,7 +83,7 @@ namespace FuelDeliveryPricing.Services
         public void WriteInterestResults(List<InterestResult> results, string fileName)
         {
             string outputDirectory = Path.Combine(
-                Directory.GetCurrentDirectory(), "output");
+                Directory.GetCurrentDirectory(), _configuration.OutputFolder);
 
             Directory.CreateDirectory(outputDirectory);
 
@@ -85,7 +91,7 @@ namespace FuelDeliveryPricing.Services
 
             using var writer = new StreamWriter(filePath, false);
 
-            writer.WriteLine("Vardenis_Pavardenis");
+            writer.WriteLine(_configuration.Name);
             writer.WriteLine("ShipmentID,DueDate,DaysLate,LateInterest");
 
             foreach (var result in results)

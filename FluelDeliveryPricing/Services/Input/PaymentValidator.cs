@@ -7,7 +7,7 @@ using FuelDeliveryPricing.Models;
 using System.Globalization;
 using FuelDeliveryPricing.Configuration;
 
-namespace FuelDeliveryPricing.Services
+namespace FuelDeliveryPricing.Services.Input
 {
     public class PaymentValidator
     {
@@ -52,12 +52,12 @@ namespace FuelDeliveryPricing.Services
                     PaidDate = date,
                 });
             }
-                return valid;
+            return valid;
 
 
         }
 
-        public bool TryParseDate(JsonElement element, string[] dateFormats, out DateOnly date)
+        private bool TryParseDate(JsonElement element, string[] dateFormats, out DateOnly date)
         {
             string dateString = element.ValueKind == JsonValueKind.String
                 ? element.GetString()!

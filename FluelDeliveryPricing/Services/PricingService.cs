@@ -20,66 +20,17 @@ namespace FuelDeliveryPricing.Services
         }
         public DeliveryResult CalculatePrice(Shipment shipment, decimal? customVat = null, decimal? customGasolineExciseRate = null)
         {
-            // 1. Determine discount rate
-            decimal discountRate = 0m;
 
-            if (shipment.Volume > _configuration.DiscountThresholdLarge)
-                discountRate = _configuration.DiscountLarge;
-            else if (shipment.Volume > _configuration.DiscountThresholdSmall)
-                discountRate = _configuration.DiscountSmall;
+            decimal netFuelPrice = CalculateFuelPrice(shipment.Volume, shipment.BasePrice);
 
-            // 2. Calculate net fuel price
-            decimal netFuelPrice = Round(
-                shipment.Volume *
-                shipment.BasePrice *
-                (1 - discountRate)
-            );
+            decimal logisticsCost = CalculateLogisticsCost(shipment.Distance, shipment.Volume);
 
-            // 3. Calculate logistics cost
-            decimal logisticsCost = Round(
-                shipment.Distance *
-                _configuration.DeliveryPricePerKm +
-                (shipment.Volume < _configuration.SmallLoadThreshold
-                    ? _configuration.SmallLoadFee
-                    : 0m)
-            );
+            decimal excise = CalculateExcize(shipment.Type, shipment.Volume, customGasolineExciseRate);
 
-            // 4. Determine excise rate
-            decimal exciseRate = shipment.Type switch
-            {
-                FuelType.Gasoline => customGasolineExciseRate ?? _configuration.GasolineExcise,
-                FuelType.Diesel => _configuration.DieselExcise,
-                FuelType.LPG => _configuration.LpgExcise,
-                _ => throw new ArgumentException("Unknown fuel type.")
-            };
+            decimal vat = CalculateVat(shipment.Client, shipment.Date, netFuelPrice, logisticsCost, excise, customVat);
 
-            
-            decimal excise = Round(shipment.Volume * exciseRate);
-
-            
-
-            // 5. Determine VAT rate
-            decimal vatRate = shipment.Client switch
-            {
-                ClientType.Exempt => 0m,
-
-                ClientType.Private => customVat ?? (shipment.Date <
-                             _configuration.VatChangeDate
-                    ? _configuration.VatBefore2024
-                    : _configuration.VatFrom2024),
-
-                _ => throw new ArgumentException("Unknown client type.")
-            };
-
-            // 6. Calculate VAT
-            decimal vat = Round(
-                (netFuelPrice + logisticsCost + excise) * vatRate
-            );
-
-            // 7. Calculate total tax
             decimal totalTax = Round(excise + vat);
 
-            // 8. Calculate grand total
             decimal grandTotal = Round(
                 netFuelPrice + logisticsCost + totalTax
             );
@@ -100,6 +51,64 @@ namespace FuelDeliveryPricing.Services
         private static decimal Round(decimal value)
         {
             return Math.Round(value, 2, MidpointRounding.AwayFromZero);
+        }
+
+        private decimal CalculateVat(ClientType client, DateOnly date, decimal netFuelPrice, decimal logisticsCost, decimal excise, decimal? customVat)
+        {
+            decimal vatRate = client switch
+            {
+                ClientType.Exempt => 0m,
+
+                ClientType.Private => customVat ?? (date <
+                             _configuration.VatChangeDate
+                    ? _configuration.VatBefore2024
+                    : _configuration.VatFrom2024),
+
+                _ => throw new ArgumentException("Unknown client type.")
+            };
+
+            return Round((netFuelPrice + logisticsCost + excise) * vatRate);
+        }
+        private decimal CalculateExcize(FuelType type, decimal volume, decimal? customGasolineExciseRate)
+        {
+            decimal exciseRate = type switch
+            {
+                FuelType.Gasoline => customGasolineExciseRate ?? _configuration.GasolineExcise,
+                FuelType.Diesel => _configuration.DieselExcise,
+                FuelType.LPG => _configuration.LpgExcise,
+                _ => throw new ArgumentException("Unknown fuel type.")
+            };
+            return Round(volume * exciseRate);
+        }
+
+        private decimal CalculateFuelPrice(decimal volume, decimal basePrice)
+        {
+            decimal discountRate = DetermineDiscountRate(volume);
+            return Round(volume * basePrice * (1 - discountRate)
+            );
+        }
+
+        private decimal CalculateLogisticsCost(decimal distance, decimal volume)
+        {
+            decimal logisticsCost = Round(
+                distance *
+                _configuration.DeliveryPricePerKm +
+                (volume < _configuration.SmallLoadThreshold
+                    ? _configuration.SmallLoadFee
+                    : 0m)
+            );
+            return logisticsCost;
+
+        }
+        private decimal DetermineDiscountRate(decimal volume)
+        {
+            decimal discountRate = 0m;
+            if (volume > _configuration.DiscountThresholdLarge)
+                discountRate = _configuration.DiscountLarge;
+            else if (volume > _configuration.DiscountThresholdSmall)
+                discountRate = _configuration.DiscountSmall;
+
+            return discountRate;
         }
 
 

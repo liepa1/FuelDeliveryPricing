@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using FuelDeliveryPricing.Configuration;
 using Microsoft.Extensions.Configuration;
 
-namespace FuelDeliveryPricing.Services
+namespace FuelDeliveryPricing.Services.Input
 {
     public class ConsoleInput
     {

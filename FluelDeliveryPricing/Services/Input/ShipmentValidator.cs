@@ -6,10 +6,12 @@ using Microsoft.VisualBasic;
 using FuelDeliveryPricing.Configuration;
 using FuelDeliveryPricing.Models.Results;
 
+namespace FuelDeliveryPricing.Services.Input;
 public class ShipmentValidator
 {
     private readonly ValidationConfiguration _configuration;
-    public ShipmentValidator(ValidationConfiguration configuration) { 
+    public ShipmentValidator(ValidationConfiguration configuration)
+    {
         _configuration = configuration;
     }
     public (List<Shipment> Valid, List<ShipmentError> Errors) Validate(JsonElement root)
@@ -20,8 +22,6 @@ public class ShipmentValidator
 
         var processedIds = new HashSet<string>();
 
-        string[] dateFormats = _configuration.DateFormats;
-        
 
         foreach (JsonElement element in root.EnumerateArray())
         {
@@ -45,7 +45,7 @@ public class ShipmentValidator
             }
 
             // 2. Check required fields
-            if (HasMissingFields(element, _configuration)) //PAKEISTI _CONFIGURATION
+            if (HasMissingFields(element))
             {
                 AddError(errors, id, ErrorCode.MISSING_FIELD);
                 continue;
@@ -67,14 +67,14 @@ public class ShipmentValidator
             }
 
             // 5. Validate date
-            if (!TryParseDate(element, dateFormats, out DateOnly date))
+            if (!TryParseDate(element, out DateOnly date))
             {
                 AddError(errors, id, ErrorCode.INVALID_DATE);
                 continue;
             }
 
             // 6. Validate numeric values
-            if (!TryParseNumerics(element, out decimal volume, out decimal distance, out decimal basePrice ))
+            if (!TryParseNumerics(element, out decimal volume, out decimal distance, out decimal basePrice))
             {
                 AddError(errors, id, ErrorCode.INVALID_VALUE);
                 continue;
@@ -96,7 +96,7 @@ public class ShipmentValidator
         return (valid, errors);
     }
 
-    private bool HasMissingFields(JsonElement element, ValidationConfiguration _configuration)
+    private bool HasMissingFields(JsonElement element)
     {
 
         // 1. Check required fields
@@ -160,8 +160,9 @@ public class ShipmentValidator
         return true;
     }
 
-    public bool TryParseDate(JsonElement element, string [] dateFormats, out DateOnly date)
+    private bool TryParseDate(JsonElement element, out DateOnly date)
     {
+        string[] dateFormats = _configuration.DateFormats;
         string dateString = element.GetProperty("date")
                 .ValueKind == JsonValueKind.String
                 ? element.GetProperty("date").GetString()!
@@ -194,11 +195,11 @@ public class ShipmentValidator
                || volume <= 0
                || distance < 0
                || basePrice < 0)
-            { return false; }
+        { return false; }
         return true;
     }
 
-    private void AddError(List<ShipmentError> errors,string id, ErrorCode code)
+    private void AddError(List<ShipmentError> errors, string id, ErrorCode code)
     {
         errors.Add(new ShipmentError
         {

@@ -27,9 +27,6 @@ public class PricingConfiguration
 
     public DateOnly VatChangeDate { get; set; }
 
-    public void Validate()
-    {
-        
-    }
+    
 }
 

@@ -5,17 +5,16 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace FuelDeliveryPricing.Services
+namespace FuelDeliveryPricing.Services.Input
 {
-    public class ShipmentReader
+    public class JsonReader
     {
-        public JsonDocument Read(string filePath)
+        public async Task<JsonDocument> Read(string filePath)
         {
             string currentDirectory = Directory.GetCurrentDirectory();
             string fullPath = Path.Combine(currentDirectory, filePath);
-            string json = File.ReadAllText(fullPath);
-
-            return JsonDocument.Parse(json);
+            using FileStream stream = File.OpenRead(fullPath);
+            return await JsonDocument.ParseAsync(stream);
         }
     }
 }

@@ -8,6 +8,7 @@ namespace FuelDeliveryPricing.Configuration
 {
     public class FileConfiguration
     {
+        public string Name { get; set; } = "";
         public string ShipmentsInput { get; set; } = "";
         public string PaymentsInput { get; set; } = "";
         public string OutputFolder { get; set; } = "";
@@ -15,11 +16,7 @@ namespace FuelDeliveryPricing.Configuration
         public string Task2Output { get; set; } = "";
         public string Bonus1Output { get; set; } = "";
         public string Bonus2Output { get; set; } = "";
+        public string ErrorsOutput { get; set; } = "";
 
-
-        public void Validate()
-        {
-            if (string.IsNullOrEmpty(OutputFolder)) { throw new Exception("OutputFolder is not configured"); }
-        }
     } 
 }
